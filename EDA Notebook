@@ -1,0 +1,707 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+campaignperformance_df=pd.read_csv(r'C:\Users\NehaSinghParihar\AppData\Local\Temp\6daeee2d-0416-4170-b297-5d77c253025f_marketing_campaign_dataset.csv.zip.25f\marketing_campaign_dataset.csv')
+
+
+# In[ ]:
+
+
+campaignperformance_df.head()
+
+
+# In[ ]:
+
+
+campaignperformance_df.tail()
+
+
+# In[ ]:
+
+
+print(campaignperformance_df.isnull().sum())
+
+campaignperformance_df['Date'] = pd.to_datetime(campaignperformance_df['Date'])
+
+
+# In[ ]:
+
+
+campaignperformance_df.dtypes
+
+
+# In[ ]:
+
+
+campaignperformance_df.isnull().sum()
+
+
+# In[ ]:
+
+
+print(campaignperformance_df[['Conversion_Rate', 'ROI', 'Engagement_Score']].describe())
+
+
+# **Analysis By Company**
+
+# In[ ]:
+
+
+performance_by_company=campaignperformance_df.groupby('Company')[['Conversion_Rate', 'ROI', 'Engagement_Score']].mean().reset_index()
+print(performance_by_company)
+
+
+# In[ ]:
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=performance_by_company, x='Company', y='Conversion_Rate')
+plt.title('Average Conversion Rate by Company')
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=performance_by_company, x='Company', y='ROI')
+plt.title('Average ROI by Company')
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=performance_by_company, x='Company', y='Engagement_Score')
+plt.title('Average Engagement Score by Company')
+plt.show()
+
+
+# In[ ]:
+
+
+performance_by_channelUsed=campaignperformance_df.groupby('Channel_Used')[['Conversion_Rate', 'ROI', 'Engagement_Score']].mean().reset_index()
+print(performance_by_channelUsed)
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=performance_by_channelUsed, x='Channel_Used', y='Conversion_Rate')
+plt.title('Average Conversion Rate by Channel')
+plt.xticks(rotation=90)
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=performance_by_channelUsed, x='Channel_Used', y='ROI')
+plt.title('Average ROI by Channel')
+plt.xticks(rotation=90)
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=performance_by_channelUsed, x='Channel_Used', y='Engagement_Score')
+plt.title('Average Engagement Score by Channel')
+plt.xticks(rotation=90)
+plt.show()
+
+
+# In[ ]:
+
+
+audience_performance=campaignperformance_df.groupby('Target_Audience')[['Conversion_Rate', 'ROI', 'Engagement_Score']].mean().reset_index()
+print(performance_by_channelUsed)
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=audience_performance, x='Target_Audience', y='Conversion_Rate')
+plt.title('Average Conversion Rate by Target Audience')
+plt.xticks(rotation=90)
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=audience_performance, x='Target_Audience', y='ROI')
+plt.title('Average ROI by Target Audience')
+plt.xticks(rotation=90)
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=audience_performance, x='Target_Audience', y='Engagement_Score')
+plt.title('Average Engagement Score by Target Audience')
+plt.xticks(rotation=90)
+plt.show()
+
+
+# **Customer Segmentation**
+
+# In[ ]:
+
+
+campaignperformance_df['Acquisition_Cost'] = campaignperformance_df['Acquisition_Cost'].replace(r'[\$,]', '', regex=True).astype(float)
+
+
+# In[ ]:
+
+
+campaignperformance_df['Acquisition_Cost']=pd.to_numeric(campaignperformance_df['Acquisition_Cost'], downcast="integer")
+
+
+# In[ ]:
+
+
+print(campaignperformance_df['Acquisition_Cost'])
+
+
+# In[ ]:
+
+
+campaignperformance_df['Acquisition_Cost'].fillna(campaignperformance_df['Acquisition_Cost'].mean(), inplace=False)
+
+
+
+# In[ ]:
+
+
+segment_group = campaignperformance_df.groupby('Customer_Segment').agg({
+    'Clicks': 'sum',
+    'Impressions': 'sum',
+    'Engagement_Score': 'mean',
+    'Conversion_Rate': 'mean',
+    'ROI': 'mean',
+    'Acquisition_Cost': 'mean'
+}).reset_index()
+
+
+segment_groupdf = segment_group.round({
+    'Engagement_Score': 2,
+    'Conversion_Rate': 2,
+    'ROI': 2,
+    'Acquisition_Cost': 2,
+})
+
+
+# In[ ]:
+
+
+# Click through Rate
+segment_group['CTR'] = round((segment_group['Clicks'] / segment_group['Impressions']) * 100,2)
+
+segment_group
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+sns.barplot(data=segment_groupdf, x='Customer_Segment', y='Conversion_Rate')
+plt.title('Conversion Rate by Customer Segment')
+plt.xlabel('Customer Segment')
+plt.ylabel('Conversion Rate (%)')
+plt.xticks(rotation=45)
+plt.show()
+
+# Bar chart for Engagement Score by Customer Segment
+plt.figure(figsize=(12, 6))
+sns.barplot(data=segment_groupdf, x='Customer_Segment', y='Engagement_Score')
+plt.title('Engagement Score by Customer Segment')
+plt.xlabel('Customer Segment')
+plt.ylabel('Engagement Score')
+plt.xticks(rotation=45)
+plt.show()
+
+# Scatter plot for ROI vs. Acquisition Cost by Customer Segment
+plt.figure(figsize=(12, 6))
+sns.scatterplot(data=segment_groupdf, x='Acquisition_Cost', y='ROI', hue='Customer_Segment', s=100)
+plt.title('ROI vs. Acquisition Cost by Customer Segment')
+plt.xlabel('Acquisition Cost')
+plt.ylabel('ROI')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.show()
+
+
+# **Channel Effectiveness**
+
+# In[ ]:
+
+
+# Group by Channel_Used
+channel_stats = campaignperformance_df.groupby('Channel_Used').agg({
+    'Acquisition_Cost': 'mean',
+    'Conversion_Rate': 'mean',
+    'ROI': 'mean'
+}).reset_index()
+
+channel_stats
+
+
+# In[ ]:
+
+
+# Bar plot for Acquisition Costs
+plt.figure(figsize=(10, 6))
+sns.barplot(data=channel_stats, x='Channel_Used', y='Acquisition_Cost')
+plt.title('Average Acquisition Cost by Marketing Channel')
+plt.xlabel('Marketing Channel')
+plt.ylabel('Average Acquisition Cost')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# In[ ]:
+
+
+# Bar plot for Conversion Rates
+plt.figure(figsize=(10, 6))
+sns.barplot(data=channel_stats, x='Channel_Used', y='Conversion_Rate')
+plt.title('Average Conversion Rate by Marketing Channel')
+plt.xlabel('Marketing Channel')
+plt.ylabel('Average Conversion Rate')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# In[ ]:
+
+
+# Bar plot for ROI
+plt.figure(figsize=(10, 6))
+sns.barplot(data=channel_stats, x='Channel_Used', y='ROI')
+plt.title('Average ROI by Marketing Channel')
+plt.xlabel('Marketing Channel')
+plt.ylabel('Average ROI')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# **Geographical Analysis**
+
+# In[ ]:
+
+
+grouped_by_location = campaignperformance_df.groupby('Location')
+
+
+# In[ ]:
+
+
+location_metrics = grouped_by_location.agg({
+    'Engagement_Score': 'mean',
+    'Conversion_Rate': 'mean'
+}).reset_index()
+
+location_metrics.columns = ['Location', 'Avg_Engagement_Score', 'Avg_Conversion_Rate']
+
+print(location_metrics.head())
+
+
+# In[ ]:
+
+
+sorted_by_engagement = location_metrics.sort_values(by='Avg_Engagement_Score', ascending=False)
+sorted_by_conversion = location_metrics.sort_values(by='Avg_Conversion_Rate', ascending=False)
+
+print("Top regions by engagement score:")
+print(sorted_by_engagement.head())
+
+print("Top regions by conversion rate:")
+print(sorted_by_conversion.head())
+
+
+# In[ ]:
+
+
+import matplotlib.pyplot as plt
+
+# Plot top 10 regions by engagement score
+top_10_engagement = sorted_by_engagement.head(10)
+plt.figure(figsize=(12, 6))
+plt.bar(top_10_engagement['Location'], top_10_engagement['Avg_Engagement_Score'])
+plt.xlabel('Location')
+plt.ylabel('Average Engagement Score')
+plt.title('Top 5 Regions by Engagement Score')
+plt.xticks(rotation=45)
+plt.show()
+
+# Plot top 10 regions by conversion rate
+top_10_conversion = sorted_by_conversion.head(10)
+plt.figure(figsize=(12, 6))
+plt.bar(top_10_conversion['Location'], top_10_conversion['Avg_Conversion_Rate'])
+plt.xlabel('Location')
+plt.ylabel('Average Conversion Rate')
+plt.title('Top 5 Regions by Conversion Rate')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# **Duration Analysis**
+
+# In[ ]:
+
+
+campaignperformance_df['Date'] = pd.to_datetime(campaignperformance_df['Date'])
+
+campaignperformance_df['Month'] = campaignperformance_df['Date'].dt.month
+campaignperformance_df['Year'] = campaignperformance_df['Date'].dt.year
+
+assert campaignperformance_df['Date'].dtype == 'datetime64[ns]', "Date column is not in datetime format"
+
+
+# In[ ]:
+
+
+monthly_data = campaignperformance_df.groupby(['Year', 'Month']).agg({
+    'Conversion_Rate': 'mean',
+    'ROI': 'mean',
+    'Clicks': 'sum',
+    'Impressions': 'sum',
+    'Engagement_Score': 'mean'
+}).reset_index()
+
+
+# In[ ]:
+
+
+monthly_data['Date'] = pd.to_datetime(monthly_data[['Year', 'Month']].assign(Day=1))
+print(monthly_data.head())
+
+
+# In[ ]:
+
+
+campaignperformance_df['Quarter'] = campaignperformance_df['Date'].dt.to_period('Q')
+
+quarterly_data = campaignperformance_df.groupby('Quarter').agg({
+    'Conversion_Rate': 'mean',
+    'ROI': 'mean',
+    'Clicks': 'sum',
+    'Impressions': 'sum',
+    'Engagement_Score': 'mean'
+}).reset_index()
+quarterly_data['Date'] = quarterly_data['Quarter'].dt.to_timestamp()
+
+print(quarterly_data.head())
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data['Date'], monthly_data['Conversion_Rate'], label='Conversion Rate')
+plt.plot(monthly_data['Date'], monthly_data['ROI'], label='ROI')
+plt.xlabel('Date')
+plt.ylabel('Metrics')
+plt.title('Monthly Campaign Performance Trends')
+plt.legend()
+plt.show()
+
+plt.figure(figsize=(12, 6))
+plt.plot(quarterly_data['Date'], quarterly_data['Conversion_Rate'], label='Conversion Rate')
+plt.plot(quarterly_data['Date'], quarterly_data['ROI'], label='ROI')
+plt.xlabel('Date')
+plt.ylabel('Metrics')
+plt.title('Quarterly Campaign Performance Trends')
+plt.legend()
+plt.show()
+
+# Step 4: Analysis
+highest_conversion = monthly_data.loc[monthly_data['Conversion_Rate'].idxmax()]
+lowest_conversion = monthly_data.loc[monthly_data['Conversion_Rate'].idxmin()]
+
+print("Highest Conversion Rate:")
+print(highest_conversion)
+
+print("\nLowest Conversion Rate:")
+print(lowest_conversion)
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data['Date'], monthly_data['Conversion_Rate'], label='Conversion Rate')
+plt.xlabel('Date')
+plt.ylabel('Conversion Rate')
+plt.title('Monthly Conversion Rate Trends')
+plt.legend()
+plt.show()
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data['Date'], monthly_data['ROI'], label='ROI')
+plt.xlabel('Date')
+plt.ylabel('ROI')
+plt.title('Monthly ROI Trends')
+plt.legend()
+plt.show()
+
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data['Date'], monthly_data['Clicks'], label='Clicks')
+plt.xlabel('Date')
+plt.ylabel('Clicks')
+plt.title('Monthly Clicks Trends')
+plt.legend()
+plt.show()
+
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data['Date'], monthly_data['Impressions'], label='Impressions')
+plt.xlabel('Date')
+plt.ylabel('Impressions')
+plt.title('Monthly Impressions Trends')
+plt.legend()
+plt.show()
+
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data['Date'], monthly_data['Engagement_Score'], label='Engagement Score')
+plt.xlabel('Date')
+plt.ylabel('Engagement Score')
+plt.title('Monthly Engagement Score Trends')
+plt.legend()
+plt.show()
+
+
+# **Language and Localization Analysis**
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+sns.countplot(data=campaignperformance_df, x='Language')
+plt.title('Distribution of Campaigns by Language')
+plt.xlabel('Language')
+plt.ylabel('Number of Campaigns')
+plt.show()
+
+# Basic performance metrics by language
+performance_metrics = campaignperformance_df.groupby('Language').agg({
+    'Conversion_Rate': 'mean',
+    'Engagement_Score': 'mean'
+}).reset_index()
+
+print(performance_metrics)
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+sns.barplot(data=performance_metrics, x='Language', y='Conversion_Rate')
+plt.title('Average Conversion Rate by Language')
+plt.xlabel('Language')
+plt.ylabel('Average Conversion Rate')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.barplot(data=performance_metrics, x='Language', y='Engagement_Score')
+plt.title('Average Engagement Score by Language')
+plt.xlabel('Language')
+plt.ylabel('Average Engagement Score')
+plt.show()
+
+
+# In[ ]:
+
+
+from scipy.stats import ttest_ind
+
+# Hypothesis testing for conversion rates
+languages = campaignperformance_df['Language'].unique()
+for i in range(len(languages)):
+    for j in range(i+1, len(languages)):
+        lang1 = campaignperformance_df[campaignperformance_df['Language'] == languages[i]]['Conversion_Rate']
+        lang2 = campaignperformance_df[campaignperformance_df['Language'] == languages[j]]['Conversion_Rate']
+        t_stat, p_val = ttest_ind(lang1, lang2)
+        print(f"T-test between {languages[i]} and {languages[j]}: p-value = {p_val}")
+
+numeric_columns = campaignperformance_df.select_dtypes(include=['float64', 'int64']).columns
+
+correlation_matrix = campaignperformance_df[numeric_columns].corr()
+print(correlation_matrix['Conversion_Rate'].sort_values(ascending=False))
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Matrix Heatmap')
+plt.show()
+
+
+# **Cost Analysis**
+
+# In[ ]:
+
+
+print(campaignperformance_df[['Acquisition_Cost', 'Conversion_Rate', 'ROI']].describe())
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='Acquisition_Cost', y='ROI', data=df)
+plt.title('Acquisition Cost vs ROI')
+plt.xlabel('Acquisition Cost')
+plt.ylabel('ROI')
+plt.show()
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='Acquisition_Cost', y='Conversion_Rate', data=df)
+plt.title('Acquisition Cost vs Conversion Rate')
+plt.xlabel('Acquisition Cost')
+plt.ylabel('Conversion Rate')
+plt.show()
+
+
+# In[ ]:
+
+
+correlation_matrix = campaignperformance_df[['Acquisition_Cost', 'Conversion_Rate', 'ROI']].corr()
+print(correlation_matrix)
+
+
+# In[ ]:
+
+
+# Regression analysis (Acquisition Cost vs ROI)
+import statsmodels.api as sm
+
+X = campaignperformance_df['Acquisition_Cost']
+y = campaignperformance_df['ROI']
+X = sm.add_constant(X)  # adding a constant
+
+model = sm.OLS(y, X).fit()
+predictions = model.predict(X)
+
+print(model.summary())
+
+
+# In[ ]:
+
+
+high_roi_threshold = campaignperformance_df['ROI'].quantile(0.75)
+low_cost_threshold = campaignperformance_df['Acquisition_Cost'].quantile(0.25)
+
+# Filter campaigns
+cost_effective_campaigns = campaignperformance_df[(campaignperformance_df['ROI'] >= high_roi_threshold) & (campaignperformance_df['Acquisition_Cost'] <= low_cost_threshold)]
+
+# Display cost-effective campaigns
+cost_effective_campaigns
+
+
+# In[ ]:
+
+
+print("Number of cost-effective campaigns:", cost_effective_campaigns.shape[0])
+print("Average ROI of cost-effective campaigns:", cost_effective_campaigns['ROI'].mean())
+print("Average Acquisition Cost of cost-effective campaigns:", cost_effective_campaigns['Acquisition_Cost'].mean())
+
+
+# **Clicks and Impression**
+
+# In[ ]:
+
+
+print(campaignperformance_df[['Clicks', 'Impressions', 'Conversion_Rate']].describe())
+
+
+# In[ ]:
+
+
+clicks_impressions_corr = campaignperformance_df['Clicks'].corr(campaignperformance_df['Impressions'])
+print(f"Correlation between Clicks and Impressions: {clicks_impressions_corr}")
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 6))
+plt.scatter(campaignperformance_df['Impressions'], campaignperformance_df['Clicks'], alpha=0.5)
+plt.title('Clicks vs. Impressions')
+plt.xlabel('Impressions')
+plt.ylabel('Clicks')
+plt.show()
+
+
+# In[ ]:
+
+
+# Define high engagement and low conversion thresholds
+high_engagement_threshold = campaignperformance_df['Clicks'].quantile(0.75)  # Top 25% clicks
+low_conversion_threshold = campaignperformance_df['Conversion_Rate'].quantile(0.25)  # Bottom 25% conversion rate
+
+# Filter campaigns
+high_engagement_low_conversion = campaignperformance_df[(campaignperformance_df['Clicks'] >= high_engagement_threshold) & 
+                                    (campaignperformance_df['Conversion_Rate'] <= low_conversion_threshold)]
+
+print(high_engagement_low_conversion[['Campaign_ID', 'Clicks', 'Conversion_Rate']])
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+plt.hist(df['Clicks'], bins=50, alpha=0.7)
+plt.title('Distribution of Clicks')
+plt.xlabel('Clicks')
+plt.ylabel('Frequency')
+plt.show()
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+plt.hist(df['Conversion_Rate'], bins=50, alpha=0.7)
+plt.title('Distribution of Conversion Rates')
+plt.xlabel('Conversion Rate')
+plt.ylabel('Frequency')
+plt.show()
+
+
+# In[ ]:
+
+
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Impressions'], df['Clicks'], alpha=0.5, label='All Campaigns')
+plt.scatter(high_engagement_low_conversion['Impressions'], high_engagement_low_conversion['Clicks'], 
+            color='red', label='High Engagement, Low Conversion')
+plt.title('Clicks vs. Impressions (Highlighted)')
+plt.xlabel('Impressions')
+plt.ylabel('Clicks')
+plt.legend()
+plt.show()
+
+
+# In[ ]:
+
+
+
+
